@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+wallpaper_dir=~/Pictures/wallpapers
+
+
+while getopts "p:" option; do
+    case $option in
+        p) wallpaper=$OPTARG 
+            if [[ -f $wallpaper_dir/$wallpaper ]]; then
+                hyprctl hyprpaper unload all
+                hyprctl hyprpaper preload "$(cd $wallpaper_dir && pwd)/$wallpaper"
+                hyprctl hyprpaper wallpaper ",$wallpaper_dir/$wallpaper"
+            else
+                echo "Wallpaper does not exist"
+            fi
+            ;;
+        \?) echo "Invalid option -$OPTARG" 
+            exit 1
+            ;;
+    esac
+    exit 0
+done
+
+
+selected_file=$(cd $wallpaper_dir && fzf)
+if [[ -n $selected_file ]]; then
+    hyprctl hyprpaper unload all
+    hyprctl hyprpaper preload "$(cd $wallpaper_dir && pwd)/$selected_file"
+    hyprctl hyprpaper wallpaper ",$wallpaper_dir/$selected_file"
+else
+    echo "No wallpaper selected"
+fi
