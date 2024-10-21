@@ -1,15 +1,23 @@
 #!/usr/bin/env bash
+set -eou pipefail
 
-device=$1
+# List audio devices
+audio_devices="$(
+wpctl status | 
+awk '/Sinks:/ {start=1} /Sources:/ {start=0} start' | 
+rg '[0-9]' | 
+awk '{for(i=2; i<=NF; i++) printf $i (i<NF?OFS:ORS)}' | 
+sed 's/*/ /'|
+sed 's/^  //')"
+chosen=0
+while [ $chosen -le 0 ] 
+do 
+    echo "Audio devices: "
+    echo " "
+    echo "$audio_devices"| awk  '{print $2" "$3" "$4}'|  nl -w2 -s') ' 
+    read -p "Choose one: " chosen
+done 
+wpctl set-default $(echo "$audio_devices" | awk '{print}' |  nl -w2 -s ') '| sed -n "$chosen"p | awk '{print $2}' | sed 's/\.//')
 
-case "$device" in
-    headset)pactl set-default-sink alsa_output.usb-Corsair_Corsair_HS65_SURROUND-00.analog-stereo
-    ;;
-    box)pactl set-default-sink alsa_output.pci-0000_2c_00.4.analog-stereo 
-    ;;
-    hdmi)pactl set-default-sink alsa_output.pci-0000_08_00.1.hdmi-stereo 
-    ;;
-    *) echo "Could'nt find the device" 
-    ;;
-esac
+
 
